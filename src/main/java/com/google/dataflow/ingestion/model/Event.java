@@ -1,33 +1,46 @@
+/*
+ *
+ *  Copyright (c) 2024  Google LLC
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ *  use this file except in compliance with the License. You may obtain a copy of
+ *  the License at  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ *  License for the specific language governing permissions and limitations under
+ *  the License.
+ */
+
 package com.google.dataflow.ingestion.model;
 
 import com.google.auto.value.AutoOneOf;
 import org.apache.beam.sdk.coders.CustomCoder;
 import org.apache.beam.sdk.coders.DefaultCoder;
-import org.apache.beam.sdk.extensions.avro.coders.AvroCoder;
-import org.apache.beam.sdk.schemas.AutoValueSchema;
-import org.apache.beam.sdk.schemas.annotations.DefaultSchema;
 import org.apache.beam.sdk.schemas.annotations.SchemaCreate;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 @AutoOneOf(Event.Type.class)
 @DefaultCoder(CustomCoder.class)
 public abstract class Event {
-  public enum Type {LocationChange, LastNameChange}
-  public abstract Type getType();
+    public enum Type {
+        LocationChange,
+        LastNameChange
+    }
 
-  public abstract  LocationChange getLocationChange();
+    public abstract Type getType();
 
-  public abstract  String getLastNameChange();
+    public abstract LocationChange getLocationChange();
 
-  @SchemaCreate
-  public static Event of(LocationChange locationChange) {
-    return AutoOneOf_Event.locationChange(locationChange);
-  }
+    public abstract String getLastNameChange();
 
-  @SchemaCreate
-  public static Event of(String s) {
-    return AutoOneOf_Event.lastNameChange(s);
-  }
+    @SchemaCreate
+    public static Event of(LocationChange locationChange) {
+        return AutoOneOf_Event.locationChange(locationChange);
+    }
 
-
+    @SchemaCreate
+    public static Event of(String s) {
+        return AutoOneOf_Event.lastNameChange(s);
+    }
 }

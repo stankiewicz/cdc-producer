@@ -1,14 +1,28 @@
+/*
+ *
+ *  Copyright (c) 2024  Google LLC
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ *  use this file except in compliance with the License. You may obtain a copy of
+ *  the License at  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ *  License for the specific language governing permissions and limitations under
+ *  the License.
+ */
+
 package com.google.dataflow.ingestion.pipeline;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.dataflow.ingestion.model.CDC.Person;
-import com.google.dataflow.ingestion.model.LocationChange;
+import com.google.dataflow.ingestion.model.Event;
 import com.google.dataflow.ingestion.transforms.ActionableTransform;
 import com.google.dataflow.ingestion.transforms.BuildEvents;
 import com.google.dataflow.ingestion.transforms.BuildRecord;
 import com.google.dataflow.ingestion.transforms.ParseCDCTransform;
 import com.google.dataflow.ingestion.transforms.PersistCDCTransform;
-import com.google.dataflow.ingestion.model.Event;
 import java.util.Map;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.gcp.pubsub.PubsubIO;
@@ -24,59 +38,72 @@ import org.apache.beam.sdk.values.Row;
 
 public class CDCPipeline {
 
-  public interface Options
-      extends  PipelineOptions {
+    public interface Options extends PipelineOptions {
 
-    @Description("Project ID for Bigtable")
-    String getBigTableProjectId();
+        @Description("Input Topic")
+        String getTopic();
 
-    @Description("Instance ID for Bigtable")
-    String getBigTableInstanceId();
+        @Description("Project ID for Bigtable")
+        String getBigTableProjectId();
 
-    @Description("Table ID for Bigtable")
-    String getBigTableTableId();
+        @Description("Instance ID for Bigtable")
+        String getBigTableInstanceId();
 
-    @Description("AppProfile ID for Bigtable")
-    String getBigTableAppProfileId();
-  }
+        @Description("Table ID for Bigtable")
+        String getBigTableTableId();
 
-  public static void main(String[] args) {
+        @Description("AppProfile ID for Bigtable")
+        String getBigTableAppProfileId();
+    }
 
-    CDCPipeline.Options options = PipelineOptionsFactory.fromArgs(args)
-        .withValidation().as(CDCPipeline.Options.class);
-    Pipeline pipeline = Pipeline.create(options);
+    public static void main(String[] args) {
 
-    String projectId = options.getBigTableProjectId();
-    String instanceId = options.getBigTableInstanceId();
-    String tableId = options.getBigTableTableId();
-    String appProfileId = options.getBigTableAppProfileId();
+        CDCPipeline.Options options =
+                PipelineOptionsFactory.fromArgs(args)
+                        .withValidation()
+                        .as(CDCPipeline.Options.class);
+        Pipeline pipeline = Pipeline.create(options);
 
-    // read person topic
-    PCollection<String> cdc = pipeline.apply(PubsubIO.readStrings().fromTopic("person"));
-    // parse to row
-    final PCollection<Row> rows = cdc.apply("Extract Rows", new ParseCDCTransform(Person.class));
+        String projectId = options.getBigTableProjectId();
+        String instanceId = options.getBigTableInstanceId();
+        String tableId = options.getBigTableTableId();
+        String appProfileId = options.getBigTableAppProfileId();
 
+        // read person topic
+        PCollection<String> cdc =
+                pipeline.apply(PubsubIO.readStrings().fromTopic(options.getTopic()));
+        // parse to row
+        final PCollection<Row> rows =
+                cdc.apply("Extract Rows", new ParseCDCTransform(Person.class));
 
-    rows.apply("Persist", new PersistCDCTransform(
-        projectId, instanceId, tableId, appProfileId
-    ));
+        rows.apply(
+                "Persist", new PersistCDCTransform(projectId, instanceId, tableId, appProfileId));
 
-    // TODO should this be run before CBT lookup or after?
+        // TODO should this be run before CBT lookup or after?
 
-    // ORDER MATTERS - feed immutable map in the same order
-    Map<String, String> filters = ImmutableMap.of("locationChange","`before.CITY` <> `after.CITY`"
-        ,"surnameChange","`before.LAST_NAME` <> `after.LAST_NAME`");
-    PCollection<Row> actionable = rows.apply("Complex rule engine",
-        new ActionableTransform("before.PERSON_ID", filters));
+        // ORDER MATTERS - feed immutable map in the same order
+        Map<String, String> filters =
+                ImmutableMap.of(
+                        "locationChange",
+                        "`before.CITY` <> `after.CITY`",
+                        "surnameChange",
+                        "`before.LAST_NAME` <> `after.LAST_NAME`");
+        PCollection<Row> actionable =
+                rows.apply(
+                        "Complex rule engine",
+                        new ActionableTransform("before.PERSON_ID", filters));
 
-    final PCollection<Row> checked = actionable.apply("Checkpoint", Reshuffle.viaRandomKey());
+        final PCollection<Row> checked = actionable.apply("Checkpoint", Reshuffle.viaRandomKey());
 
-    final PCollection<KV<String, Event>> events = checked.apply("BuildEvents",
-        ParDo.of(new BuildEvents(projectId,instanceId,tableId, appProfileId)));
+        final PCollection<KV<String, Event>> events =
+                checked.apply(
+                        "BuildEvents",
+                        ParDo.of(new BuildEvents(projectId, instanceId, tableId, appProfileId)));
 
-    final PCollection<PubsubMessage> recordsWithTopics = events.apply("Build Record", ParDo.of(new BuildRecord()));
-    recordsWithTopics.apply("Send to consumers", PubsubIO.writeMessagesDynamic());
+        final PCollection<PubsubMessage> recordsWithTopics =
+                events.apply("Build Record", ParDo.of(new BuildRecord()));
+        recordsWithTopics.apply("Send to consumers", PubsubIO.writeMessagesDynamic());
 
-    pipeline.run();
-  }
+        pipeline.run();
+    }
 }
