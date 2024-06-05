@@ -17,10 +17,10 @@ package com.google.dataflow.ingestion.transforms;
 
 import com.google.bigtable.v2.Mutation;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.dataflow.ingestion.bigtable.BeamRowToBigtableMutation;
 import com.google.dataflow.ingestion.model.CDC.Person;
 import com.google.dataflow.ingestion.model.DB;
 import com.google.protobuf.ByteString;
-import org.apache.beam.sdk.io.gcp.bigtable.BeamRowToBigtableMutation;
 import org.apache.beam.sdk.io.gcp.bigtable.BigtableIO;
 import org.apache.beam.sdk.schemas.transforms.Convert;
 import org.apache.beam.sdk.transforms.MapElements;

@@ -70,7 +70,10 @@ public class DB {
                     person.getAfterFirstName(),
                     person.getAfterLastName(),
                     person.getAfterCity(),
-                    "" + person.getAfterPersonId());
+                    ""
+                            + (person.getOpType().equals("d")
+                                    ? person.getBeforePersonId()
+                                    : person.getAfterPersonId()));
         }
     }
 }

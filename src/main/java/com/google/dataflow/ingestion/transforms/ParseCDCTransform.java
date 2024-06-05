@@ -15,7 +15,6 @@
 
 package com.google.dataflow.ingestion.transforms;
 
-import com.google.dataflow.ingestion.model.CDC.Person;
 import org.apache.beam.sdk.extensions.avro.coders.AvroCoder;
 import org.apache.beam.sdk.extensions.jackson.ParseJsons;
 import org.apache.beam.sdk.schemas.NoSuchSchemaException;
@@ -26,9 +25,9 @@ import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.Row;
 import org.apache.beam.sdk.values.TypeDescriptor;
 
-public class ParseCDCTransform extends PTransform<PCollection<String>, PCollection<Row>> {
+public class ParseCDCTransform<T> extends PTransform<PCollection<String>, PCollection<Row>> {
 
-    final Class aClass;
+    final Class<T> aClass;
 
     public ParseCDCTransform(Class aClass) {
         this.aClass = aClass;
@@ -38,17 +37,15 @@ public class ParseCDCTransform extends PTransform<PCollection<String>, PCollecti
     public PCollection<Row> expand(PCollection<String> input) {
         Schema expectedSchema = null;
         try {
-            expectedSchema = input.getPipeline().getSchemaRegistry().getSchema(Person.class);
+            expectedSchema = input.getPipeline().getSchemaRegistry().getSchema(aClass);
 
-            return input.apply("Parse JSON to Beam Rows", ParseJsons.of(Person.class))
-                    .setCoder(AvroCoder.of(Person.class))
+            return input.apply("Parse JSON to Beam Rows", ParseJsons.of(aClass))
+                    .setCoder(AvroCoder.of(aClass))
                     .setSchema(
                             expectedSchema,
-                            TypeDescriptor.of(Person.class),
-                            input.getPipeline().getSchemaRegistry().getToRowFunction(Person.class),
-                            input.getPipeline()
-                                    .getSchemaRegistry()
-                                    .getFromRowFunction(Person.class))
+                            TypeDescriptor.of(aClass),
+                            input.getPipeline().getSchemaRegistry().getToRowFunction(aClass),
+                            input.getPipeline().getSchemaRegistry().getFromRowFunction(aClass))
                     .apply("toRow", Convert.toRows());
         } catch (NoSuchSchemaException e) {
             throw new RuntimeException(e);
