@@ -85,13 +85,13 @@ public class CDCPipeline {
         Map<String, String> filters =
                 ImmutableMap.of(
                         "locationChange",
-                        "`before.CITY` <> `after.CITY`",
+                        "`before_CITY` <> `after_CITY`",
                         "surnameChange",
-                        "`before.LAST_NAME` <> `after.LAST_NAME`");
+                        "`before_LAST_NAME` <> `after_LAST_NAME`");
         PCollection<Row> actionable =
                 rows.apply(
                         "Complex rule engine",
-                        new ActionableTransform("before.PERSON_ID", filters));
+                        new ActionableTransform("before_PERSON_ID", filters));
 
         final PCollection<Row> checked = actionable.apply("Checkpoint", Reshuffle.viaRandomKey());
 

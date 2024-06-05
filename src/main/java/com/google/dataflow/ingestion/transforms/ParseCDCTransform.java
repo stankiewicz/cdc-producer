@@ -15,12 +15,16 @@
 
 package com.google.dataflow.ingestion.transforms;
 
+import com.google.dataflow.ingestion.model.CDC.Person;
+import org.apache.beam.sdk.extensions.avro.coders.AvroCoder;
+import org.apache.beam.sdk.extensions.jackson.ParseJsons;
 import org.apache.beam.sdk.schemas.NoSuchSchemaException;
 import org.apache.beam.sdk.schemas.Schema;
-import org.apache.beam.sdk.transforms.JsonToRow;
+import org.apache.beam.sdk.schemas.transforms.Convert;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.Row;
+import org.apache.beam.sdk.values.TypeDescriptor;
 
 public class ParseCDCTransform extends PTransform<PCollection<String>, PCollection<Row>> {
 
@@ -34,12 +38,20 @@ public class ParseCDCTransform extends PTransform<PCollection<String>, PCollecti
     public PCollection<Row> expand(PCollection<String> input) {
         Schema expectedSchema = null;
         try {
-            final Class<? extends Class> aClass1 = aClass.getClass();
-            expectedSchema = input.getPipeline().getSchemaRegistry().getSchema(aClass);
+            expectedSchema = input.getPipeline().getSchemaRegistry().getSchema(Person.class);
+
+            return input.apply("Parse JSON to Beam Rows", ParseJsons.of(Person.class))
+                    .setCoder(AvroCoder.of(Person.class))
+                    .setSchema(
+                            expectedSchema,
+                            TypeDescriptor.of(Person.class),
+                            input.getPipeline().getSchemaRegistry().getToRowFunction(Person.class),
+                            input.getPipeline()
+                                    .getSchemaRegistry()
+                                    .getFromRowFunction(Person.class))
+                    .apply("toRow", Convert.toRows());
         } catch (NoSuchSchemaException e) {
             throw new RuntimeException(e);
         }
-
-        return input.apply("Parse JSON to Beam Rows", JsonToRow.withSchema(expectedSchema));
     }
 }
