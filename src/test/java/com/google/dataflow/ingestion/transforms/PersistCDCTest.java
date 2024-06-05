@@ -18,10 +18,12 @@ package com.google.dataflow.ingestion.transforms;
 import com.google.cloud.bigtable.admin.v2.BigtableTableAdminClient;
 import com.google.cloud.bigtable.admin.v2.BigtableTableAdminSettings;
 import com.google.cloud.bigtable.admin.v2.models.CreateTableRequest;
+import com.google.cloud.bigtable.admin.v2.models.ModifyColumnFamiliesRequest;
 import com.google.cloud.bigtable.data.v2.BigtableDataClient;
 import com.google.cloud.bigtable.data.v2.BigtableDataSettings;
 import com.google.cloud.bigtable.data.v2.models.TableId;
 import com.google.cloud.bigtable.emulator.v2.BigtableEmulatorRule;
+import com.google.dataflow.ingestion.model.CDC.Order;
 import com.google.dataflow.ingestion.model.CDC.Person;
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
@@ -37,6 +39,19 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
+/**
+ * Perform local unit testing of pipeline code which writes data to BigTable.
+ *
+ * Beam SDK for Java provides a number of utilities to make this easier
+ * https://beam.apache.org/documentation/pipelines/test-your-pipeline/
+ * For example, org.apache.beam.sdk.testing.TestPipeline
+ *
+ * Bigtable provides an emulator to use for testing
+ * https://cloud.google.com/bigtable/docs/emulator
+ * There is a Java wrapper for the emulator
+ * https://cloud.google.com/bigtable/docs/emulator#java_wrapper_for_the_emulator
+ *
+ */
 @RunWith(JUnit4.class)
 public class PersistCDCTest {
 
@@ -71,7 +86,11 @@ public class PersistCDCTest {
                                 .build());
 
         // Create a test table that can be used in tests
-        tableAdminClient.createTable(CreateTableRequest.of("cdc").addFamily("p"));
+        // column family "p" - person
+        // column family "o" - order
+        String tableId = "cdc";
+        tableAdminClient.createTable(CreateTableRequest.of(tableId).addFamily("p"));
+        tableAdminClient.modifyFamilies(ModifyColumnFamiliesRequest.of(tableId).addFamily("o"));
     }
 
     @Test
@@ -111,5 +130,10 @@ public class PersistCDCTest {
                 freshRow.getCells("p", "lastName").get(0).getValue().toStringUtf8(), "doe");
         Assert.assertEquals(
                 freshRow.getCells("p", "city").get(0).getValue().toStringUtf8(), "city2");
+    }
+
+    @Test
+    public void testOrder() throws Exception {
+        "".isEmpty();
     }
 }

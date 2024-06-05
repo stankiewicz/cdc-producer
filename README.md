@@ -53,6 +53,13 @@ Repository is created based on [quickstart](https://cloud.google.com/dataflow/do
 
 Altough pom.xml supports multiple profiles, this was tested locally and dataflow only.
 
+### Run tests
+
+run all tests
+```
+mvn test
+```
+
 ### Locally
 
 ```

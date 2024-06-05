@@ -86,4 +86,30 @@ public class CDC {
             public abstract Person build();
         }
     }
+
+    /**
+     * An Order requested by a Person
+     * The "AutoValue" annotation will generate source code for a AutoValue_CDC_Order class
+     * The "DefaultSchema" annotation
+     */
+    @AutoValue
+    @DefaultSchema(AutoValueSchema.class)
+    @DefaultCoder(AvroCoder.class)
+    public abstract static class Order {
+
+        @SchemaFieldName("op_type")
+        public @Nullable abstract String getOpType();
+
+        public static Builder newBuilder() {
+            return new AutoValue_CDC_Order.Builder();
+        }
+
+        @AutoValue.Builder
+        public abstract static class Builder {
+
+            public abstract Builder setOpType(@Nullable String opType);
+
+            public abstract Order build();
+        }
+    }
 }
