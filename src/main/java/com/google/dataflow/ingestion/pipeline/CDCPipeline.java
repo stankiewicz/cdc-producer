@@ -16,7 +16,9 @@
 package com.google.dataflow.ingestion.pipeline;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.dataflow.ingestion.model.CDC;
 import com.google.dataflow.ingestion.model.CDC.Person;
+import com.google.dataflow.ingestion.model.DB;
 import com.google.dataflow.ingestion.model.Event;
 import com.google.dataflow.ingestion.transforms.ActionableTransform;
 import com.google.dataflow.ingestion.transforms.BuildEvents;
@@ -77,7 +79,16 @@ public class CDCPipeline {
                 cdc.apply("Extract Rows", new ParseCDCTransform<Person>(Person.class));
 
         rows.apply(
-                "Persist", new PersistCDCTransform(projectId, instanceId, tableId, appProfileId));
+                "Persist",
+                new PersistCDCTransform<>(
+                        projectId,
+                        instanceId,
+                        tableId,
+                        appProfileId,
+                        CDC.Person.class,
+                        DB.Person.class,
+                        DB.Person::createFrom,
+                        DB.Person.FIELD_CF_MAPPING));
 
         // TODO should this be run before CBT lookup or after?
 
