@@ -15,17 +15,19 @@
 
 package com.google.dataflow.ingestion.transforms;
 
+import com.google.common.collect.ImmutableList;
 import com.google.dataflow.ingestion.model.CDC.Person;
 import java.util.Arrays;
 import java.util.List;
-import org.apache.beam.sdk.coders.StringUtf8Coder;
 import org.apache.beam.sdk.schemas.AutoValueSchema;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Create;
+import org.apache.beam.sdk.transforms.Create.TimestampedValues;
 import org.apache.beam.sdk.transforms.SerializableFunction;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.Row;
+import org.joda.time.Instant;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -45,9 +47,12 @@ public class ParseCDCTransformTest {
                 Arrays.asList(
                         "{\"op_type\":\"i\",\"before.FIRST_NAME\":\"john\",\"after.FIRST_NAME\":\"john\",\"before.LAST_NAME\":\"doe\",\"after.LAST_NAME\":\"doe\",\"before.CITY\":\"city1\",\"after.CITY\":\"city2\",\"before.PERSON_ID\":1234,\"after.PERSON_ID\":1234"
                             + " }");
+        final TimestampedValues<String> timestamped =
+                Create.timestamped(jsons, ImmutableList.of(Instant.now().getMillis()));
         PCollection<Row> output =
-                p.apply(Create.of(jsons).withCoder(StringUtf8Coder.of()))
-                        .apply(new ParseCDCTransform(Person.class));
+                p.apply(timestamped)
+                        // .withCoder(TimestampedValueCoder.of(StringUtf8Coder.of())
+                        .apply(new ParseCDCTransform<Person>(Person.class));
 
         final SerializableFunction<Person, Row> toRowFunction =
                 p.getSchemaRegistry().getToRowFunction(Person.class);

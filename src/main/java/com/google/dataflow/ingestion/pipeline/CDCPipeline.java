@@ -74,7 +74,7 @@ public class CDCPipeline {
                 pipeline.apply(PubsubIO.readStrings().fromTopic(options.getTopic()));
         // parse to row
         final PCollection<Row> rows =
-                cdc.apply("Extract Rows", new ParseCDCTransform(Person.class));
+                cdc.apply("Extract Rows", new ParseCDCTransform<Person>(Person.class));
 
         rows.apply(
                 "Persist", new PersistCDCTransform(projectId, instanceId, tableId, appProfileId));
