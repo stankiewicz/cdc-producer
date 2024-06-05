@@ -124,4 +124,11 @@ When data is pulled, consumer will notice op_type = d and will ignore values.
 
 Out of order applies can happen if CDC changes are distributed to random partitions or if there is batch that refreshes or repeats data from CDC.
 
+# Pipeline correctness
+
+Above pipeline is correct data, assuming that input data is valid and there is no data loss (e.g. pipeline is cancelled, not drained).
+Pipeline changes to datastore are idempotent, assuming they are executed in same order - mutations are always upserting the data with specific row key and timestamp. In case of out of order, additonal logic is added on read to resolve it. 
+In case of data loss, data can be replayed, either by starting from offset or running batch. 
+Batch job could be created that takes snapshot of data and timestamp and produces mutations. If there are any gaps, it will fill it. 
+
 
