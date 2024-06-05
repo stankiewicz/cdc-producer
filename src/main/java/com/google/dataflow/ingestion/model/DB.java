@@ -30,6 +30,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class DB {
 
+    public interface Convertable {
+        public Person createFrom(CDC.Person person);
+    }
+
     @AutoValue
     @DefaultSchema(AutoValueSchema.class)
     @DefaultCoder(AvroCoder.class)

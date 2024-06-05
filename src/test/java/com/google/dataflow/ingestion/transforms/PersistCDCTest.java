@@ -24,7 +24,9 @@ import com.google.cloud.bigtable.data.v2.models.RowMutation;
 import com.google.cloud.bigtable.data.v2.models.TableId;
 import com.google.cloud.bigtable.emulator.v2.BigtableEmulatorRule;
 import com.google.common.collect.ImmutableList;
+import com.google.dataflow.ingestion.model.CDC;
 import com.google.dataflow.ingestion.model.CDC.Person;
+import com.google.dataflow.ingestion.model.DB;
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 import org.apache.beam.sdk.coders.RowCoder;
@@ -102,11 +104,15 @@ public class PersistCDCTest {
                         .withCoder(RowCoder.of(p.getSchemaRegistry().getSchema(Person.class)));
         p.apply(timestamped)
                 .apply(
-                        new PersistCDCTransform(
+                        new PersistCDCTransform<>(
                                 bigtableEmulator.getPort(),
                                 "fake-project",
                                 "fake-instance",
-                                "cdc"));
+                                "cdc",
+                                CDC.Person.class,
+                                DB.Person.class,
+                                DB.Person::createFrom,
+                                DB.Person.FIELD_CF_MAPPING));
         p.run();
 
         com.google.cloud.bigtable.data.v2.models.Row freshRow =
@@ -145,11 +151,15 @@ public class PersistCDCTest {
                         .withCoder(RowCoder.of(p.getSchemaRegistry().getSchema(Person.class)));
         p.apply(timestamped)
                 .apply(
-                        new PersistCDCTransform(
+                        new PersistCDCTransform<>(
                                 bigtableEmulator.getPort(),
                                 "fake-project",
                                 "fake-instance",
-                                "cdc"));
+                                "cdc",
+                                CDC.Person.class,
+                                DB.Person.class,
+                                DB.Person::createFrom,
+                                DB.Person.FIELD_CF_MAPPING));
         p.run();
 
         com.google.cloud.bigtable.data.v2.models.Row freshRow =
