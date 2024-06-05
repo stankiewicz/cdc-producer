@@ -50,9 +50,9 @@ public class ActionableTransformTest {
         Map filters =
                 ImmutableMap.of(
                         "locationChange",
-                        "`before.CITY` <> `after.CITY`",
+                        "`before_CITY` <> `after_CITY`",
                         "surnameChange",
-                        "`before.LAST_NAME` <> `after.LAST_NAME`");
+                        "`before_LAST_NAME` <> `after_LAST_NAME`");
 
         Person input =
                 Person.newBuilder()
@@ -75,7 +75,7 @@ public class ActionableTransformTest {
                                                 RowCoder.of(
                                                         p.getSchemaRegistry()
                                                                 .getSchema(Person.class))))
-                        .apply(new ActionableTransform("before.PERSON_ID", filters));
+                        .apply(new ActionableTransform("before_PERSON_ID", filters));
 
         PAssert.that(output)
                 .containsInAnyOrder(

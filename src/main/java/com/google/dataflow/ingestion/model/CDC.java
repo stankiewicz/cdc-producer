@@ -15,6 +15,10 @@
 
 package com.google.dataflow.ingestion.model;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.auto.value.AutoValue;
 import org.apache.beam.sdk.coders.DefaultCoder;
 import org.apache.beam.sdk.extensions.avro.coders.AvroCoder;
@@ -28,33 +32,44 @@ public class CDC {
     @AutoValue
     @DefaultSchema(AutoValueSchema.class)
     @DefaultCoder(AvroCoder.class)
+    @JsonSerialize(as = Person.class)
+    @JsonDeserialize(builder = Person.Builder.class)
     public abstract static class Person {
 
         @SchemaFieldName("op_type")
+        @JsonProperty("op_type")
         public @Nullable abstract String getOpType();
 
-        @SchemaFieldName("before.FIRST_NAME")
+        @SchemaFieldName("before_FIRST_NAME")
+        @JsonProperty("before.FIRST_NAME")
         public @Nullable abstract String getBeforeFirstName();
 
-        @SchemaFieldName("after.FIRST_NAME")
+        @SchemaFieldName("after_FIRST_NAME")
+        @JsonProperty("after.FIRST_NAME")
         public @Nullable abstract String getAfterFirstName();
 
-        @SchemaFieldName("before.LAST_NAME")
+        @SchemaFieldName("before_LAST_NAME")
+        @JsonProperty("before.LAST_NAME")
         public @Nullable abstract String getBeforeLastName();
 
-        @SchemaFieldName("after.LAST_NAME")
+        @SchemaFieldName("after_LAST_NAME")
+        @JsonProperty("after.LAST_NAME")
         public @Nullable abstract String getAfterLastName();
 
-        @SchemaFieldName("before.CITY")
+        @SchemaFieldName("before_CITY")
+        @JsonProperty("before.CITY")
         public @Nullable abstract String getBeforeCity();
 
-        @SchemaFieldName("after.CITY")
+        @SchemaFieldName("after_CITY")
+        @JsonProperty("after.CITY")
         public @Nullable abstract String getAfterCity();
 
-        @SchemaFieldName("before.PERSON_ID")
+        @SchemaFieldName("before_PERSON_ID")
+        @JsonProperty("before.PERSON_ID")
         public @Nullable abstract Long getBeforePersonId();
 
-        @SchemaFieldName("after.PERSON_ID")
+        @SchemaFieldName("after_PERSON_ID")
+        @JsonProperty("after.PERSON_ID")
         @RowKey
         public @Nullable abstract Long getAfterPersonId();
 
@@ -65,22 +80,36 @@ public class CDC {
         @AutoValue.Builder
         public abstract static class Builder {
 
+            @JsonCreator
+            public static Builder builder() {
+                return new AutoValue_CDC_Person.Builder();
+            }
+
+            @JsonProperty("op_type")
             public abstract Builder setOpType(@Nullable String opType);
 
+            @JsonProperty("before.FIRST_NAME")
             public abstract Builder setBeforeFirstName(@Nullable String beforeFirstName);
 
+            @JsonProperty("after.FIRST_NAME")
             public abstract Builder setAfterFirstName(@Nullable String afterFirstName);
 
+            @JsonProperty("before.CITY")
             public abstract Builder setBeforeCity(@Nullable String beforeCity);
 
+            @JsonProperty("after.CITY")
             public abstract Builder setAfterCity(@Nullable String afterCity);
 
+            @JsonProperty("before.LAST_NAME")
             public abstract Builder setBeforeLastName(@Nullable String beforeLastName);
 
+            @JsonProperty("after.LAST_NAME")
             public abstract Builder setAfterLastName(@Nullable String afterLastName);
 
+            @JsonProperty("before.PERSON_ID")
             public abstract Builder setBeforePersonId(@Nullable Long beforePersonId);
 
+            @JsonProperty("after.PERSON_ID")
             public abstract Builder setAfterPersonId(@Nullable Long afterPersonId);
 
             public abstract Person build();
