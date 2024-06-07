@@ -17,15 +17,21 @@ package com.google.dataflow.feature;
 
 import com.google.dataflow.feature.model.ClickstreamEvent;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import org.apache.beam.sdk.coders.StringUtf8Coder;
 import org.apache.beam.sdk.extensions.jackson.ParseJsons;
 import org.apache.beam.sdk.schemas.AutoValueSchema;
+import org.apache.beam.sdk.schemas.Schema;
+import org.apache.beam.sdk.schemas.Schema.Field;
+import org.apache.beam.sdk.schemas.Schema.FieldType;
 import org.apache.beam.sdk.schemas.SchemaCoder;
 import org.apache.beam.sdk.schemas.transforms.Convert;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.testing.TestStream;
+import org.apache.beam.sdk.transforms.Create;
+import org.apache.beam.sdk.transforms.JsonToRow;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.transforms.join.CoGroupByKey;
@@ -48,6 +54,38 @@ import org.junit.runners.JUnit4;
 public class FeatureCalculationTest {
 
     @Rule public TestPipeline p = TestPipeline.create();
+
+    @Test
+    public void testParser() throws Exception {
+
+           String in = "{ \"ride_id\":\"a60ba4d8-1501-4b5b-93ee-b7864304d0e0\",\n"
+                + "            \"latitude\":40.66684000000033,\n"
+                + "            \"longitude\":-73.83933000000202,\n"
+                + "            \"timestamp\":\"2016-08-31T11:04:02.025396463-04:00\",\n"
+                + "            \"meter_reading\":14.270274,\n"
+                + "            \"meter_increment\":0.019336415,\n"
+                + "            \"ride_status\":\"enroute\",\n"
+                + "            \"passenger_count\":2\n"
+                + "            }";
+
+            List<String> jsons =
+                Arrays.asList(in);
+            Schema schema = Schema.of(
+                Field.of("ride_id", FieldType.STRING),
+                Field.of("latitude", FieldType.DOUBLE),
+                Field.of("longitude", FieldType.DOUBLE),
+                Field.of("timestamp", FieldType.STRING),
+                Field.of("meter_reading", FieldType.DOUBLE),
+                Field.of("meter_increment", FieldType.DOUBLE),
+                Field.of("ride_status", FieldType.STRING),
+                Field.of("passenger_count", FieldType.INT64)
+            );
+
+            PCollection<String> input = p.apply(Create.of(jsons));
+            final PCollection<Row> apply = input.apply("Parse",
+                    JsonToRow.withSchema(schema));
+            p.run();
+    }
 
     @Test
     public void testFeatureCalculation() throws Exception {

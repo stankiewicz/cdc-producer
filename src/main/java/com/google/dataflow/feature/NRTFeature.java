@@ -58,7 +58,8 @@ public class NRTFeature<T> extends PTransform<PCollection<Row>, PCollection<KV<S
     @Override
     public PCollection<KV<String, T>> expand(PCollection<Row> input) {
         final PCollection<Row> windowed =
-                input.apply("d1", ParDo.of(new Debug<>("d1")))
+                input
+                    //.apply("d1", ParDo.of(new Debug<>("d1")))
                         .apply(
                                 "Sliding window",
                                 Window.<Row>into(SlidingWindows.of(slidingWindowSize).every(period))
@@ -78,7 +79,7 @@ public class NRTFeature<T> extends PTransform<PCollection<Row>, PCollection<KV<S
                                         + key));
         final PCollection<KV<String, T>> project =
                 sqlResult
-                        .apply("d3", ParDo.of(new Debug<>("d3")))
+                        //.apply("d3", ParDo.of(new Debug<>("d3")))
                         .apply(
                                 "Project",
                                 MapElements.into(
