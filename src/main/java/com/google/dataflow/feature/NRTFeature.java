@@ -74,7 +74,7 @@ public class NRTFeature<T> extends PTransform<PCollection<Row>, PCollection<KV<S
                                         + key
                                         + ", "
                                         + aggregateSql
-                                        + " as f1 from PCOLLECTION group by "
+                                        + " as f from PCOLLECTION group by "
                                         + key));
         final PCollection<KV<String, T>> project =
                 sqlResult
