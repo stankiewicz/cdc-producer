@@ -164,7 +164,7 @@ public class CDC {
         public @Nullable abstract Long getAfterOrderId();
 
         public static Builder newBuilder() {
-            return AutoValue_CDC_Order.newBuilder();
+            return new AutoValue_CDC_Order.Builder();
         }
 
         @AutoValue.Builder
@@ -172,7 +172,7 @@ public class CDC {
 
             @JsonCreator
             public static Builder builder() {
-                return AutoValue_CDC_Order.newBuilder();
+                return new AutoValue_CDC_Order.Builder();
             }
 
             @JsonProperty("op_type")
@@ -202,10 +202,10 @@ public class CDC {
             @JsonProperty("after.PERSON_ID")
             public abstract Builder setAfterPersonId(@Nullable Long afterPersonId);
 
-            @JsonProperty("before.PERSON_ID")
+            @JsonProperty("before.ORDER_ID")
             public abstract Builder setBeforeOrderId(@Nullable Long beforeOrderId);
 
-            @JsonProperty("after.PERSON_ID")
+            @JsonProperty("after.ORDER_ID")
             public abstract Builder setAfterOrderId(@Nullable Long afterOrderId);
 
             public abstract Order build();
