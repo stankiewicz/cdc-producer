@@ -71,7 +71,7 @@ public class BuildRecordTest {
                                 MapElements.into(TypeDescriptors.strings())
                                         .via(pm -> new String(pm.getPayload())));
         String expected =
-                "{\"city\":\"Warsaw\",\"first_name\":\"John\",\"last_name\":\"Doe\",\"person_id\":\"1234\"}";
+                "{\"city\":\"Warsaw\",\"first_name\":\"John\",\"last_name\":\"Doe\",\"ordersWithStatus\":{\"1\":\"delivered\"},\"person_id\":\"1234\"}";
         PAssert.that(output).containsInAnyOrder(expected);
         p.run().waitUntilFinish();
     }
