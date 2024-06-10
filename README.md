@@ -51,16 +51,16 @@ Repository is created based on [quickstart](https://cloud.google.com/dataflow/do
 
 ## Run
 
-Altough pom.xml supports multiple profiles, this was tested locally and dataflow only.
+Altough pom.xml supports multiple profiles, this is tested locally and dataflow only.
 
-### Locally
+### Locally (TODO add args)
 
 ```
 mvn compile exec:java \
 -Dexec.mainClass=com.google.dataflow.ingestion.pipeline.CDCPipeline \
 -Dexec.args="--output=counts"
 ```
-### Dataflow
+### Dataflow (TODO add args)
 
 ```
 mvn -Pdataflow-runner compile exec:java \
