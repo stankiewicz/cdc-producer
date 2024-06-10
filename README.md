@@ -96,7 +96,7 @@ Table cdc_orders is mapped from Order entity in cdc, with that change that:
 - only one column family is used (p)
 - op_type is kept and is used as tombstone in case data is deleted
 
-| rowkey | cf=p<br/>cn=op_type | cf=p<br/>cn=status | cf=p<br/>cn=items | cf=p<br/>cn=address |
+| rowkey | cf=o<br/>cn=op_type | cf=o<br/>cn=status | cf=o<br/>cn=items | cf=o<br/>cn=address |
 |--------|---------------------|--------------------|-------------------|---------------------|
 | 1234_1 | i                   | New                | SKU1,SKU2         | Warsaw              |
 | 1234_2 | d                   |                    |                   |                     |
