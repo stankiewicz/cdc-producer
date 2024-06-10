@@ -20,8 +20,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.auto.value.AutoValue;
-import org.apache.beam.sdk.coders.DefaultCoder;
-import org.apache.beam.sdk.extensions.avro.coders.AvroCoder;
 import org.apache.beam.sdk.schemas.AutoValueSchema;
 import org.apache.beam.sdk.schemas.annotations.DefaultSchema;
 import org.apache.beam.sdk.schemas.annotations.SchemaFieldName;
@@ -31,7 +29,6 @@ public class CDC {
 
     @AutoValue
     @DefaultSchema(AutoValueSchema.class)
-    @DefaultCoder(AvroCoder.class)
     @JsonSerialize(as = Person.class)
     @JsonDeserialize(builder = Person.Builder.class)
     public abstract static class Person {
@@ -113,6 +110,105 @@ public class CDC {
             public abstract Builder setAfterPersonId(@Nullable Long afterPersonId);
 
             public abstract Person build();
+        }
+    }
+
+    @AutoValue
+    @DefaultSchema(AutoValueSchema.class)
+    @JsonSerialize(as = Order.class)
+    @JsonDeserialize(builder = Order.Builder.class)
+    public abstract static class Order {
+
+        @SchemaFieldName("op_type")
+        @JsonProperty("op_type")
+        public @Nullable abstract String getOpType();
+
+        @SchemaFieldName("before_STATUS")
+        @JsonProperty("before.STATUS")
+        public @Nullable abstract String getBeforeStatus();
+
+        @SchemaFieldName("after_STATUS")
+        @JsonProperty("after.STATUS")
+        public @Nullable abstract String getAfterStatus();
+
+        @SchemaFieldName("before_ITEMS")
+        @JsonProperty("before.ITEMS")
+        public @Nullable abstract String getBeforeItems();
+
+        @SchemaFieldName("after_ITEMS")
+        @JsonProperty("after.ITEMS")
+        public @Nullable abstract String getAfterItems();
+
+        @SchemaFieldName("before_ADDRESS")
+        @JsonProperty("before.ADDRESS")
+        public @Nullable abstract String getBeforeAddress();
+
+        @SchemaFieldName("after_ADDRESS")
+        @JsonProperty("after.ADDRESS")
+        public @Nullable abstract String getAfterAddress();
+
+        @SchemaFieldName("before_PERSON_ID")
+        @JsonProperty("before.PERSON_ID")
+        public @Nullable abstract Long getBeforePersonId();
+
+        @SchemaFieldName("after_PERSON_ID")
+        @JsonProperty("after.PERSON_ID")
+        public @Nullable abstract Long getAfterPersonId();
+
+        @SchemaFieldName("before_ORDER_ID")
+        @JsonProperty("before.ORDER_ID")
+        public @Nullable abstract Long getBeforeOrderId();
+
+        @SchemaFieldName("after_ORDER_ID")
+        @JsonProperty("after.ORDER_ID")
+        public @Nullable abstract Long getAfterOrderId();
+
+        public static Builder newBuilder() {
+            return new AutoValue_CDC_Order.Builder();
+        }
+
+        @AutoValue.Builder
+        public abstract static class Builder {
+
+            @JsonCreator
+            public static Builder builder() {
+                return new AutoValue_CDC_Order.Builder();
+            }
+
+            @JsonProperty("op_type")
+            public abstract Builder setOpType(@Nullable String opType);
+
+            @JsonProperty("before.STATUS")
+            public abstract Builder setBeforeStatus(@Nullable String beforeStatus);
+
+            @JsonProperty("after.STATUS")
+            public abstract Builder setAfterStatus(@Nullable String afterStatus);
+
+            @JsonProperty("before.ADDRESS")
+            public abstract Builder setBeforeAddress(@Nullable String beforeAddress);
+
+            @JsonProperty("after.ADDRESS")
+            public abstract Builder setAfterAddress(@Nullable String afterAddress);
+
+            @JsonProperty("before.ITEMS")
+            public abstract Builder setBeforeItems(@Nullable String beforeItems);
+
+            @JsonProperty("after.ITEMS")
+            public abstract Builder setAfterItems(@Nullable String afterItems);
+
+            @JsonProperty("before.PERSON_ID")
+            public abstract Builder setBeforePersonId(@Nullable Long beforePersonId);
+
+            @JsonProperty("after.PERSON_ID")
+            public abstract Builder setAfterPersonId(@Nullable Long afterPersonId);
+
+            @JsonProperty("before.ORDER_ID")
+            public abstract Builder setBeforeOrderId(@Nullable Long beforeOrderId);
+
+            @JsonProperty("after.ORDER_ID")
+            public abstract Builder setAfterOrderId(@Nullable Long afterOrderId);
+
+            public abstract Order build();
         }
     }
 }

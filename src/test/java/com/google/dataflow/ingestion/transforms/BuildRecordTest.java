@@ -15,6 +15,7 @@
 
 package com.google.dataflow.ingestion.transforms;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.dataflow.ingestion.model.Event;
 import com.google.dataflow.ingestion.model.EventCoder;
 import com.google.dataflow.ingestion.model.LocationChange;
@@ -54,8 +55,13 @@ public class BuildRecordTest {
                                                         "location_change",
                                                         Event.of(
                                                                 LocationChange.create(
-                                                                        "1234", "Warsaw", "John",
-                                                                        "Doe"))))
+                                                                        "1234",
+                                                                        "Warsaw",
+                                                                        "John",
+                                                                        "Doe",
+                                                                        ImmutableMap.of(
+                                                                                "1",
+                                                                                "delivered")))))
                                         .withCoder(
                                                 KvCoder.of(
                                                         StringUtf8Coder.of(),
@@ -65,7 +71,7 @@ public class BuildRecordTest {
                                 MapElements.into(TypeDescriptors.strings())
                                         .via(pm -> new String(pm.getPayload())));
         String expected =
-                "{\"city\":\"Warsaw\",\"first_name\":\"John\",\"last_name\":\"Doe\",\"person_id\":\"1234\"}";
+                "{\"city\":\"Warsaw\",\"first_name\":\"John\",\"last_name\":\"Doe\",\"ordersWithStatus\":{\"1\":\"delivered\"},\"person_id\":\"1234\"}";
         PAssert.that(output).containsInAnyOrder(expected);
         p.run().waitUntilFinish();
     }

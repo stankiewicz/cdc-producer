@@ -15,13 +15,17 @@
 
 package com.google.dataflow.ingestion.transforms;
 
+import com.google.api.gax.rpc.ServerStream;
 import com.google.cloud.bigtable.data.v2.BigtableDataClient;
 import com.google.cloud.bigtable.data.v2.BigtableDataSettings;
+import com.google.cloud.bigtable.data.v2.models.Query;
 import com.google.cloud.bigtable.data.v2.models.TableId;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.dataflow.ingestion.model.Event;
 import com.google.dataflow.ingestion.model.LocationChange;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.Row;
@@ -89,12 +93,26 @@ public class BuildEvents extends DoFn<Row, KV<String, Event>> {
             // TODO read once vs read per event?
             final com.google.cloud.bigtable.data.v2.models.Row latestRow =
                     dataClient.readRow(TableId.of(tableId), row.getString("key"));
+
+            Map<String, String> orderStatus = new HashMap<>();
+
+            ServerStream<com.google.cloud.bigtable.data.v2.models.Row> rows =
+                    dataClient.readRows(
+                            Query.create(TableId.of("cdc_order")).prefix(row.getString("key")));
+            for (com.google.cloud.bigtable.data.v2.models.Row order : rows) {
+
+                orderStatus.put(
+                        order.getKey().toStringUtf8().split("_")[1],
+                        order.getCells("o", "status").get(0).getValue().toStringUtf8());
+            }
+
             LocationChange lc =
                     LocationChange.create(
                             row.getString("key"),
                             latestRow.getCells("p", "city").get(0).getValue().toStringUtf8(),
                             latestRow.getCells("p", "firstName").get(0).getValue().toStringUtf8(),
-                            latestRow.getCells("p", "lastName").get(0).getValue().toStringUtf8());
+                            latestRow.getCells("p", "lastName").get(0).getValue().toStringUtf8(),
+                            orderStatus);
             outputReceiver.output(KV.of("location_change", Event.of(lc)));
         }
     }

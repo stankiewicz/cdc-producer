@@ -18,6 +18,7 @@ package com.google.dataflow.ingestion.model;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.auto.value.AutoValue;
+import java.util.Map;
 import org.apache.beam.sdk.schemas.AutoValueSchema;
 import org.apache.beam.sdk.schemas.annotations.DefaultSchema;
 import org.apache.beam.sdk.schemas.annotations.SchemaCreate;
@@ -28,8 +29,12 @@ import org.apache.beam.sdk.schemas.annotations.SchemaCreate;
 public abstract class LocationChange {
     @SchemaCreate
     public static LocationChange create(
-            String personId, String city, String firstName, String lastName) {
-        return new AutoValue_LocationChange(personId, city, firstName, lastName);
+            String personId,
+            String city,
+            String firstName,
+            String lastName,
+            Map<String, String> ordersWithStatus) {
+        return new AutoValue_LocationChange(personId, city, firstName, lastName, ordersWithStatus);
     }
 
     @JsonProperty("person_id")
@@ -43,4 +48,7 @@ public abstract class LocationChange {
 
     @JsonProperty("last_name")
     abstract String getLastName();
+
+    @JsonProperty("ordersWithStatus")
+    abstract Map<String, String> getOrdersWithStatus();
 }
