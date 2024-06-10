@@ -83,7 +83,7 @@ public class DB {
     public abstract static class Order {
 
         public static final Map<String, Set<String>> FIELD_CF_MAPPING =
-            ImmutableMap.of("o", ImmutableSet.of("op_type", "items", "status", "address"));
+                ImmutableMap.of("o", ImmutableSet.of("op_type", "items", "status", "address"));
 
         @SchemaFieldName("op_type")
         public @Nullable abstract String getOpType();
@@ -102,24 +102,24 @@ public class DB {
 
         @SchemaCreate
         public static Order create(
-            String opType,
-            @Nullable String status,
-            @Nullable String items,
-            @Nullable String address,
-            @Nullable String key) {
+                String opType,
+                @Nullable String status,
+                @Nullable String items,
+                @Nullable String address,
+                @Nullable String key) {
             return new AutoValue_DB_Order(opType, status, items, address, key);
         }
 
         public static Order createFrom(CDC.Order order) {
             return create(
-                order.getOpType(),
-                order.getAfterStatus(),
-                order.getAfterItems(),
-                order.getAfterAddress(),
-                ""
-                    + (order.getOpType().equals("d")
-                    ? order.getBeforePersonId()+"_" + order.getBeforeOrderId()
-                    : order.getAfterPersonId()+"_" + order.getAfterOrderId()));
+                    order.getOpType(),
+                    order.getAfterStatus(),
+                    order.getAfterItems(),
+                    order.getAfterAddress(),
+                    ""
+                            + (order.getOpType().equals("d")
+                                    ? order.getBeforePersonId() + "_" + order.getBeforeOrderId()
+                                    : order.getAfterPersonId() + "_" + order.getAfterOrderId()));
         }
     }
 }

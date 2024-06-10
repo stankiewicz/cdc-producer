@@ -15,6 +15,7 @@
 
 package com.google.dataflow.ingestion.transforms;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.dataflow.ingestion.model.Event;
 import com.google.dataflow.ingestion.model.EventCoder;
 import com.google.dataflow.ingestion.model.LocationChange;
@@ -54,8 +55,13 @@ public class BuildRecordTest {
                                                         "location_change",
                                                         Event.of(
                                                                 LocationChange.create(
-                                                                        "1234", "Warsaw", "John",
-                                                                        "Doe"))))
+                                                                        "1234",
+                                                                        "Warsaw",
+                                                                        "John",
+                                                                        "Doe",
+                                                                        ImmutableMap.of(
+                                                                                "1",
+                                                                                "delivered")))))
                                         .withCoder(
                                                 KvCoder.of(
                                                         StringUtf8Coder.of(),

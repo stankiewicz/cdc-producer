@@ -171,98 +171,97 @@ public class PersistCDCTest {
         Assert.assertEquals(freshRow.getCells("p", "lastName").size(), 0);
     }
 
-
     @Test
     public void testOrder() throws Exception {
         final SerializableFunction<Order, Row> toRowFunction =
-            p.getSchemaRegistry().getToRowFunction(Order.class);
+                p.getSchemaRegistry().getToRowFunction(Order.class);
         Order input =
-            Order.newBuilder()
-                .setOpType("i")
-                .setAfterAddress("city1")
-                .setBeforeAddress("city1")
-                .setAfterPersonId(1234L)
-                .setBeforePersonId(1234L)
-                .setAfterItems("SKU1")
-                .setBeforeItems("SKU1")
-                .setAfterStatus("delivered")
-                .setBeforeStatus("shipping")
-                .setBeforeOrderId(1L)
-                .setAfterOrderId(1L)
-                .build();
+                Order.newBuilder()
+                        .setOpType("i")
+                        .setAfterAddress("city1")
+                        .setBeforeAddress("city1")
+                        .setAfterPersonId(1234L)
+                        .setBeforePersonId(1234L)
+                        .setAfterItems("SKU1")
+                        .setBeforeItems("SKU1")
+                        .setAfterStatus("delivered")
+                        .setBeforeStatus("shipping")
+                        .setBeforeOrderId(1L)
+                        .setAfterOrderId(1L)
+                        .build();
         Row inputRow = toRowFunction.apply(input);
         final TimestampedValues<Row> timestamped =
-            Create.timestamped(
-                    ImmutableList.of(inputRow),
-                    ImmutableList.of(Instant.now().getMillis()))
-                .withCoder(RowCoder.of(p.getSchemaRegistry().getSchema(Order.class)));
+                Create.timestamped(
+                                ImmutableList.of(inputRow),
+                                ImmutableList.of(Instant.now().getMillis()))
+                        .withCoder(RowCoder.of(p.getSchemaRegistry().getSchema(Order.class)));
         p.apply(timestamped)
-            .apply(
-                new PersistCDCTransform<>(
-                    bigtableEmulator.getPort(),
-                    "fake-project",
-                    "fake-instance",
-                    "cdc_order",
-                    CDC.Order.class,
-                    DB.Order.class,
-                    DB.Order::createFrom,
-                    DB.Order.FIELD_CF_MAPPING));
+                .apply(
+                        new PersistCDCTransform<>(
+                                bigtableEmulator.getPort(),
+                                "fake-project",
+                                "fake-instance",
+                                "cdc_order",
+                                CDC.Order.class,
+                                DB.Order.class,
+                                DB.Order::createFrom,
+                                DB.Order.FIELD_CF_MAPPING));
         p.run();
 
         com.google.cloud.bigtable.data.v2.models.Row freshRow =
-            dataClient.readRow(TableId.of("cdc_order"), "1234_1");
+                dataClient.readRow(TableId.of("cdc_order"), "1234_1");
         Assert.assertEquals(
-            freshRow.getCells("o", "status").get(0).getValue().toStringUtf8(), "delivered");
+                freshRow.getCells("o", "status").get(0).getValue().toStringUtf8(), "delivered");
         Assert.assertEquals(
-            freshRow.getCells("o", "items").get(0).getValue().toStringUtf8(), "SKU1");
+                freshRow.getCells("o", "items").get(0).getValue().toStringUtf8(), "SKU1");
         Assert.assertEquals(
-            freshRow.getCells("o", "address").get(0).getValue().toStringUtf8(), "city1");
+                freshRow.getCells("o", "address").get(0).getValue().toStringUtf8(), "city1");
     }
 
     @Test
     public void testOrderRemoval() throws Exception {
         dataClient.mutateRow(
-            RowMutation.create(TableId.of("cdc_order"), "1234_1").setCell("o", "op_type", "i"));
+                RowMutation.create(TableId.of("cdc_order"), "1234_1").setCell("o", "op_type", "i"));
         final SerializableFunction<Order, Row> toRowFunction =
-            p.getSchemaRegistry().getToRowFunction(Order.class);
+                p.getSchemaRegistry().getToRowFunction(Order.class);
         Order input =
-            Order.newBuilder()
-                .setOpType("d")
-                .setAfterAddress(null)
-                .setBeforeAddress("city1")
-                .setAfterPersonId(null)
-                .setBeforePersonId(1234L)
-                .setAfterItems(null)
-                .setBeforeItems("SKU1")
-                .setAfterStatus(null)
-                .setBeforeStatus("shipping")
-                .setBeforeOrderId(1L)
-                .setAfterOrderId(null)
-                .build();
+                Order.newBuilder()
+                        .setOpType("d")
+                        .setAfterAddress(null)
+                        .setBeforeAddress("city1")
+                        .setAfterPersonId(null)
+                        .setBeforePersonId(1234L)
+                        .setAfterItems(null)
+                        .setBeforeItems("SKU1")
+                        .setAfterStatus(null)
+                        .setBeforeStatus("shipping")
+                        .setBeforeOrderId(1L)
+                        .setAfterOrderId(null)
+                        .build();
 
         Row inputRow = toRowFunction.apply(input);
         final TimestampedValues<Row> timestamped =
-            Create.timestamped(
-                    ImmutableList.of(inputRow),
-                    ImmutableList.of(Instant.now().getMillis()))
-                .withCoder(RowCoder.of(p.getSchemaRegistry().getSchema(Order.class)));
+                Create.timestamped(
+                                ImmutableList.of(inputRow),
+                                ImmutableList.of(Instant.now().getMillis()))
+                        .withCoder(RowCoder.of(p.getSchemaRegistry().getSchema(Order.class)));
         p.apply(timestamped)
-            .apply(
-                new PersistCDCTransform<>(
-                    bigtableEmulator.getPort(),
-                    "fake-project",
-                    "fake-instance",
-                    "cdc_order",
-                    CDC.Order.class,
-                    DB.Order.class,
-                    DB.Order::createFrom,
-                    DB.Order.FIELD_CF_MAPPING));
+                .apply(
+                        new PersistCDCTransform<>(
+                                bigtableEmulator.getPort(),
+                                "fake-project",
+                                "fake-instance",
+                                "cdc_order",
+                                CDC.Order.class,
+                                DB.Order.class,
+                                DB.Order::createFrom,
+                                DB.Order.FIELD_CF_MAPPING));
         p.run();
 
         com.google.cloud.bigtable.data.v2.models.Row freshRow =
-            dataClient.readRow(TableId.of("cdc_order"), "1234_1");
+                dataClient.readRow(TableId.of("cdc_order"), "1234_1");
         Assert.assertEquals(
-            freshRow.getCells("o", "op_type").get(0).getValue().toStringUtf8(), "d");
+                freshRow.getCells("o", "op_type").get(0).getValue().toStringUtf8(), "d");
         Assert.assertEquals(freshRow.getCells("o", "status").size(), 0);
     }
 }

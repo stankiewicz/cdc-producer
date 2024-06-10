@@ -79,32 +79,32 @@ public class ParseCDCTransformTest {
         p.getSchemaRegistry().registerSchemaProvider(Person.class, new AutoValueSchema());
 
         List<String> jsons =
-            Arrays.asList(
-                "{\"op_type\":\"i\",\"before.STATUS\":\"shipping\",\"after.STATUS\":\"delivered\",\"before.ITEMS\":\"SKU1\",\"after.ITEMS\":\"SKU1\",\"before.ADDRESS\":\"city1\",\"after.ADDRESS\":\"city1\",\"before.PERSON_ID\":1234,\"after.PERSON_ID\":1234,\"before.ORDER_ID\":1,\"after.ORDER_ID\":1"
-                    + " }");
+                Arrays.asList(
+                        "{\"op_type\":\"i\",\"before.STATUS\":\"shipping\",\"after.STATUS\":\"delivered\",\"before.ITEMS\":\"SKU1\",\"after.ITEMS\":\"SKU1\",\"before.ADDRESS\":\"city1\",\"after.ADDRESS\":\"city1\",\"before.PERSON_ID\":1234,\"after.PERSON_ID\":1234,\"before.ORDER_ID\":1,\"after.ORDER_ID\":1"
+                            + " }");
         final TimestampedValues<String> timestamped =
-            Create.timestamped(jsons, ImmutableList.of(Instant.now().getMillis()));
+                Create.timestamped(jsons, ImmutableList.of(Instant.now().getMillis()));
         PCollection<Row> output =
-            p.apply(timestamped)
-                // .withCoder(TimestampedValueCoder.of(StringUtf8Coder.of())
-                .apply(new ParseCDCTransform<Order>(Order.class));
+                p.apply(timestamped)
+                        // .withCoder(TimestampedValueCoder.of(StringUtf8Coder.of())
+                        .apply(new ParseCDCTransform<Order>(Order.class));
 
         final SerializableFunction<Order, Row> toRowFunction =
-            p.getSchemaRegistry().getToRowFunction(Order.class);
+                p.getSchemaRegistry().getToRowFunction(Order.class);
         Order expected =
-            Order.newBuilder()
-                .setOpType("i")
-                .setAfterAddress("city1")
-                .setBeforeAddress("city1")
-                .setAfterPersonId(1234L)
-                .setBeforePersonId(1234L)
-                .setAfterItems("SKU1")
-                .setBeforeItems("SKU1")
-                .setAfterStatus("delivered")
-                .setBeforeStatus("shipping")
-                .setBeforeOrderId(1L)
-                .setAfterOrderId(1L)
-                .build();
+                Order.newBuilder()
+                        .setOpType("i")
+                        .setAfterAddress("city1")
+                        .setBeforeAddress("city1")
+                        .setAfterPersonId(1234L)
+                        .setBeforePersonId(1234L)
+                        .setAfterItems("SKU1")
+                        .setBeforeItems("SKU1")
+                        .setAfterStatus("delivered")
+                        .setBeforeStatus("shipping")
+                        .setBeforeOrderId(1L)
+                        .setAfterOrderId(1L)
+                        .build();
         PAssert.that(output).containsInAnyOrder(toRowFunction.apply(expected));
         p.run().waitUntilFinish();
     }

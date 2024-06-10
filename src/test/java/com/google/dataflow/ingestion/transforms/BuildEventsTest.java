@@ -23,6 +23,7 @@ import com.google.cloud.bigtable.data.v2.BigtableDataClient;
 import com.google.cloud.bigtable.data.v2.BigtableDataSettings;
 import com.google.cloud.bigtable.data.v2.models.RowMutation;
 import com.google.cloud.bigtable.emulator.v2.BigtableEmulatorRule;
+import com.google.common.collect.ImmutableMap;
 import com.google.dataflow.ingestion.model.Event;
 import com.google.dataflow.ingestion.model.EventCoder;
 import com.google.dataflow.ingestion.model.LocationChange;
@@ -84,6 +85,7 @@ public class BuildEventsTest {
 
         // Create a test table that can be used in tests
         tableAdminClient.createTable(CreateTableRequest.of("cdc").addFamily("p"));
+        tableAdminClient.createTable(CreateTableRequest.of("cdc_order").addFamily("o"));
 
         ApiFuture<Void> mutateFuture =
                 dataClient.mutateRowAsync(
@@ -91,6 +93,18 @@ public class BuildEventsTest {
                                 .setCell("p", "city", "Warsaw")
                                 .setCell("p", "firstName", "John")
                                 .setCell("p", "lastName", "Doe"));
+
+        dataClient.mutateRow(
+                RowMutation.create("cdc_order", "1234_1")
+                        .setCell("o", "status", "delivered")
+                        .setCell("o", "items", "SKU1")
+                        .setCell("o", "address", "city1"));
+
+        dataClient.mutateRow(
+                RowMutation.create("cdc_order", "1234_2")
+                        .setCell("o", "status", "shipping")
+                        .setCell("o", "items", "SKU2")
+                        .setCell("o", "address", "city1"));
 
         mutateFuture.get();
     }
@@ -147,7 +161,12 @@ public class BuildEventsTest {
                 .containsInAnyOrder(
                         KV.of(
                                 "location_change",
-                                LocationChange.create("1234", "Warsaw", "John", "Doe")));
+                                LocationChange.create(
+                                        "1234",
+                                        "Warsaw",
+                                        "John",
+                                        "Doe",
+                                        ImmutableMap.of("1", "delivered", "2", "shipping"))));
         p.run().waitUntilFinish();
     }
 }
