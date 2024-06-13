@@ -20,8 +20,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.util.Map;
 import java.util.Set;
-import org.apache.beam.sdk.coders.DefaultCoder;
-import org.apache.beam.sdk.extensions.avro.coders.AvroCoder;
 import org.apache.beam.sdk.schemas.AutoValueSchema;
 import org.apache.beam.sdk.schemas.annotations.DefaultSchema;
 import org.apache.beam.sdk.schemas.annotations.SchemaCreate;
@@ -32,7 +30,6 @@ public class DB {
 
     @AutoValue
     @DefaultSchema(AutoValueSchema.class)
-    @DefaultCoder(AvroCoder.class)
     public abstract static class Person {
 
         public static final Map<String, Set<String>> FIELD_CF_MAPPING =
@@ -79,7 +76,6 @@ public class DB {
 
     @AutoValue
     @DefaultSchema(AutoValueSchema.class)
-    @DefaultCoder(AvroCoder.class)
     public abstract static class Order {
 
         public static final Map<String, Set<String>> FIELD_CF_MAPPING =

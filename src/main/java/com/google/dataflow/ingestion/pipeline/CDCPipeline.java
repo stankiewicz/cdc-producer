@@ -20,6 +20,8 @@ import com.google.dataflow.ingestion.model.CDC;
 import com.google.dataflow.ingestion.model.CDC.Person;
 import com.google.dataflow.ingestion.model.DB;
 import com.google.dataflow.ingestion.model.Event;
+import com.google.dataflow.ingestion.model.EventCoder;
+import com.google.dataflow.ingestion.model.LocationChange;
 import com.google.dataflow.ingestion.transforms.ActionableTransform;
 import com.google.dataflow.ingestion.transforms.BuildEvents;
 import com.google.dataflow.ingestion.transforms.BuildRecord;
@@ -27,11 +29,15 @@ import com.google.dataflow.ingestion.transforms.ParseCDCTransform;
 import com.google.dataflow.ingestion.transforms.PersistCDCTransform;
 import java.util.Map;
 import org.apache.beam.sdk.Pipeline;
+import org.apache.beam.sdk.coders.CannotProvideCoderException;
+import org.apache.beam.sdk.coders.KvCoder;
+import org.apache.beam.sdk.coders.StringUtf8Coder;
 import org.apache.beam.sdk.io.gcp.pubsub.PubsubIO;
 import org.apache.beam.sdk.io.gcp.pubsub.PubsubMessage;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
+import org.apache.beam.sdk.schemas.NoSuchSchemaException;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.Reshuffle;
 import org.apache.beam.sdk.values.KV;
@@ -45,20 +51,35 @@ public class CDCPipeline {
         @Description("Input Topic")
         String getTopic();
 
+        void setTopic(String topic);
+
         @Description("Project ID for Bigtable")
         String getBigTableProjectId();
+
+        void setBigTableProjectId(String projectId);
 
         @Description("Instance ID for Bigtable")
         String getBigTableInstanceId();
 
+        void setBigTableInstanceId(String instanceId);
+
         @Description("Table ID for Bigtable")
         String getBigTableTableId();
 
+        void setBigTableTableId(String tableId);
+
+        @Description("LocationChange topic")
+        String getLocationChangeTopic();
+
+        void setLocationChangeTopic(String topic);
+
         @Description("AppProfile ID for Bigtable")
         String getBigTableAppProfileId();
+
+        void setBigTableAppProfileId(String appProfileId);
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws CannotProvideCoderException, NoSuchSchemaException {
 
         CDCPipeline.Options options =
                 PipelineOptionsFactory.fromArgs(args)
@@ -70,6 +91,11 @@ public class CDCPipeline {
         String instanceId = options.getBigTableInstanceId();
         String tableId = options.getBigTableTableId();
         String appProfileId = options.getBigTableAppProfileId();
+
+        pipeline.getCoderRegistry()
+            .registerCoderForClass(
+                LocationChange.class,
+                pipeline.getSchemaRegistry().getSchemaCoder(LocationChange.class));
 
         // read person topic
         PCollection<String> cdc =
@@ -90,8 +116,6 @@ public class CDCPipeline {
                         DB.Person::createFrom,
                         DB.Person.FIELD_CF_MAPPING));
 
-        // TODO should this be run before CBT lookup or after?
-
         // ORDER MATTERS - feed immutable map in the same order
         Map<String, String> filters =
                 ImmutableMap.of(
@@ -109,7 +133,9 @@ public class CDCPipeline {
         final PCollection<KV<String, Event>> events =
                 checked.apply(
                         "BuildEvents",
-                        ParDo.of(new BuildEvents(projectId, instanceId, tableId, appProfileId)));
+                        ParDo.of(new BuildEvents(projectId, instanceId, tableId, appProfileId,
+                            options.getLocationChangeTopic()))).setCoder(
+                    KvCoder.of(StringUtf8Coder.of(), EventCoder.of(pipeline.getCoderRegistry())));
 
         final PCollection<PubsubMessage> recordsWithTopics =
                 events.apply("Build Record", ParDo.of(new BuildRecord()));

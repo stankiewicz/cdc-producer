@@ -19,7 +19,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.dataflow.ingestion.model.Event;
-import com.google.dataflow.ingestion.model.LocationChange;
+import java.util.Collections;
+import java.util.UUID;
 import org.apache.beam.sdk.io.gcp.pubsub.PubsubMessage;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.values.KV;
@@ -40,7 +41,8 @@ public class BuildRecord extends DoFn<KV<String, Event>, PubsubMessage> {
                 json = om.writeValueAsString(event.getLocationChange());
                 break;
         }
-        PubsubMessage pm = new PubsubMessage(json.getBytes(), null).withTopic(topic);
+        PubsubMessage pm = new PubsubMessage(
+            json.getBytes(), Collections.EMPTY_MAP, UUID.randomUUID().toString()).withTopic(topic);
         outputReceiver.output(pm);
     }
 }

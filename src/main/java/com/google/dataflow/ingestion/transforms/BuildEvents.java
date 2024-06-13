@@ -35,6 +35,7 @@ public class BuildEvents extends DoFn<Row, KV<String, Event>> {
     private final String instanceId;
     private final String projectId;
     private final String appProfileId;
+    private final String locationChangeTopic;
     String tableId;
 
     BigtableDataClient dataClient;
@@ -45,7 +46,8 @@ public class BuildEvents extends DoFn<Row, KV<String, Event>> {
     int port;
 
     @VisibleForTesting
-    BuildEvents(int port, String projectId, String instanceId, String tableId) {
+    BuildEvents(int port, String projectId, String instanceId, String tableId, String locationChangeTopic) {
+        this.locationChangeTopic = locationChangeTopic;
         test = true;
         this.tableId = tableId;
         this.projectId = projectId;
@@ -54,8 +56,8 @@ public class BuildEvents extends DoFn<Row, KV<String, Event>> {
         this.appProfileId = null;
     }
 
-    public BuildEvents(String projectId, String instanceId, String tableId, String appProfileId) {
-
+    public BuildEvents(String projectId, String instanceId, String tableId, String appProfileId, String locationChangeTopic) {
+        this.locationChangeTopic = locationChangeTopic;
         this.tableId = tableId;
         this.instanceId = instanceId;
         this.projectId = projectId;
@@ -113,7 +115,7 @@ public class BuildEvents extends DoFn<Row, KV<String, Event>> {
                             latestRow.getCells("p", "firstName").get(0).getValue().toStringUtf8(),
                             latestRow.getCells("p", "lastName").get(0).getValue().toStringUtf8(),
                             orderStatus);
-            outputReceiver.output(KV.of("location_change", Event.of(lc)));
+            outputReceiver.output(KV.of(this.locationChangeTopic, Event.of(lc)));
         }
     }
 }

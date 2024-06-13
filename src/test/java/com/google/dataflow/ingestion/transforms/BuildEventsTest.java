@@ -144,7 +144,7 @@ public class BuildEventsTest {
                                                 bigtableEmulator.getPort(),
                                                 "fake-project",
                                                 "fake-instance",
-                                                "cdc")))
+                                                "cdc", "location_change")))
                         .apply(
                                 MapElements.into(
                                                 TypeDescriptors.kvs(

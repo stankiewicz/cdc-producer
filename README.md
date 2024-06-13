@@ -7,6 +7,9 @@ Repository is created based on [quickstart](https://cloud.google.com/dataflow/do
 
 ## Architecture
 
+Current pipeline implements CDC ingestion for Person table.
+Future developments, subject for developer decision, should be able to ingest Orders table.
+
 ```
 
                    ┌──────────────┐
@@ -51,25 +54,38 @@ Repository is created based on [quickstart](https://cloud.google.com/dataflow/do
 
 ## Run
 
-Altough pom.xml supports multiple profiles, this is tested locally and dataflow only.
+Although pom.xml supports multiple profiles, this is tested locally and dataflow only.
 
-### Locally (TODO add args)
+### Locally
+
+Local execution is broken due to PubSub not supporting dynamic destinations. Local example will be updated once issue is resolved.
+
+sample input:
+
+```json
+
+{"op_type":"i","before.FIRST_NAME":"john","after.FIRST_NAME":"john","before.LAST_NAME":"doe","after.LAST_NAME":"doe","before.CITY":"city1","after.CITY":"city2","before.PERSON_ID":1234,"after.PERSON_ID":1234}
 
 ```
-mvn compile exec:java \
--Dexec.mainClass=com.google.dataflow.ingestion.pipeline.CDCPipeline \
--Dexec.args="--output=counts"
-```
-### Dataflow (TODO add args)
+### Dataflow
 
 ```
 mvn -Pdataflow-runner compile exec:java \
 -Dexec.mainClass=com.google.dataflow.ingestion.pipeline.CDCPipeline \
 -Dexec.args="--project=PROJECT_ID \
---gcpTempLocation=gs://BUCKET_NAME/temp/ \
---output=gs://BUCKET_NAME/output \
 --runner=DataflowRunner \
---region=REGION"
+--bigTableProjectId=PROJECT_ID \
+--topic=projects/PROJECT_ID/topics/TOPIC_NAME \
+--bigTableInstanceId=INSTANCE_ID \
+--bigTableTableId=TABLE_ID \
+--bigTableAppProfileId=APP_PROFILE_ID \
+--locationChangeTopic=SINK_ID \
+--region=us-central1 \
+--gcpTempLocation=gs://radoslaws-playground-pso/temp/  \
+--enableStreamingEngine=true  --maxNumWorkers=1 \
+--usePublicIps=false \
+--subnetwork=regions/us-central1/subnetworks/default \
+--serviceAccount=SA"
 ```
 
 
@@ -132,7 +148,7 @@ In case of data loss, data can be replayed, either by starting from offset or ru
 Batch job could be created that takes snapshot of data and timestamp and produces mutations. If there are any gaps, it will fill it. 
 
 
-# Design considerations
+# Design considerations and future development
 
 ## Reading many low volume topics
 
@@ -154,6 +170,17 @@ There are two options for packing multiple topics into a pipeline:
 - use a single read step or use multiple read steps. You should use a single read step to do this if - All of your topics are collocated in the same cluster, or it is ok for your topics to share fate. When using a single read, a single sink or transform having issues can cause all of your topics to accumulate backlog.
 
 - multiple read IO steps
+
+
+## Backlog
+
+Example showcases proof of concept that CDC can be ingested and used as enrichment. It doesn't mean that work is done.
+Below is list of things that should be covered as part of future development.
+
+* Decide how to add new input topics like Order - new pipeline vs new input
+* Decide how to pass configuration about output topics
+* Decide how to configure SQL filters
+* Decide if to introduce data access layer for reading BigTable. At this moment reading from BT is a bit raw, while writing is generic and based on data model.
 
 ## KafkaIO read tuning
 
